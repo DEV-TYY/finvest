@@ -1,0 +1,1205 @@
+        <?php
+    }
+}
+
+// Sanitize service cards repeater
+function futuristic_it_sanitize_service_cards($input) {
+    $sanitized = array();
+    if (is_array($input)) {
+        foreach ($input as $card) {
+            $sanitized[] = array(
+                'icon'      => isset($card['icon']) ? sanitize_text_field($card['icon']) : '',
+                'title'     => isset($card['title']) ? sanitize_text_field($card['title']) : '',
+                'desc'      => isset($card['desc']) ? sanitize_textarea_field($card['desc']) : '',
+                'link'      => isset($card['link']) ? esc_url_raw($card['link']) : '',
+                'link_text' => isset($card['link_text']) ? sanitize_text_field($card['link_text']) : 'Learn More',
+            );
+        }
+    }
+    return $sanitized;
+}
+
+// Customizer Repeater Control Class
+if (class_exists('WP_Customize_Control')) {
+    class futuristic_it_repeater_control extends WP_Customize_Control {
+        public $type = 'futuristic-it-repeater';
+
+        public function render_content() {
+            $value = $this->value();
+            if (!is_array($value)) {
+                $value = array();
+            }
+            ?>
+            <div class="futuristic-it-repeater-wrap" data-field="<?php echo esc_attr($this->id); ?>">
+                <div class="repeater-items">
+                    <?php foreach ($value as $index => $item) : ?>
+                        <div class="repeater-item" data-index="<?php echo esc_attr($index); ?>">
+                            <div class="repeater-item-header">
+                                <span class="repeater-item-title"><?php echo esc_html(isset($item['title']) ? $item['title'] : 'Service ' . ($index + 1)); ?></span>
+                                <button type="button" class="repeater-remove" title="Remove">&times;</button>
+                            </div>
+                            <div class="repeater-item-body">
+                                <p>
+                                    <label>Icon (emoji)</label>
+                                    <input type="text" class="widefat" value="<?php echo esc_attr(isset($item['icon']) ? $item['icon'] : ''); ?>" data-field="icon" placeholder="e.g., 💻">
+                                </p>
+                                <p>
+                                    <label>Title</label>
+                                    <input type="text" class="widefat" value="<?php echo esc_attr(isset($item['title']) ? $item['title'] : ''); ?>" data-field="title" placeholder="Service Title">
+                                </p>
+                                <p>
+                                    <label>Description</label>
+                                    <textarea class="widefat" rows="3" data-field="desc" placeholder="Short description..."><?php echo esc_textarea(isset($item['desc']) ? $item['desc'] : ''); ?></textarea>
+                                </p>
+                                <p>
+                                    <label>Link URL</label>
+                                    <input type="url" class="widefat" value="<?php echo esc_attr(isset($item['link']) ? $item['link'] : ''); ?>" data-field="link" placeholder="/services/...">
+                                </p>
+                                <p>
+                                    <label>Link Text</label>
+                                    <input type="text" class="widefat" value="<?php echo esc_attr(isset($item['link_text']) ? $item['link_text'] : 'Learn More'); ?>" data-field="link_text" placeholder="Learn More">
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button button-secondary repeater-add">+ Add Service Card</button>
+                <input type="hidden" <?php echo esc_attr($this->input_attrs); ?> value="<?php echo esc_attr(wp_json_encode($value)); ?>" <?php echo esc_attr($this->get_link()); ?> />
+            </div>
+            <?php
+        }
+    }
+}
+add_action('after_setup_theme', 'futuristic_it_theme_setup');
+
+// Load templates from subfolders
+function futuristic_it_custom_templates($template) {
+    if (is_front_page()) {
+        $custom = get_template_directory() . '/home/front-page.php';
+        if (file_exists($custom)) return $custom;
+    }
+    if (is_page_template('page-about.php')) {
+        $custom = get_template_directory() . '/about/page-about.php';
+        if (file_exists($custom)) return $custom;
+    }
+    if (is_page_template('page-contact.php')) {
+        $custom = get_template_directory() . '/contact/page-contact.php';
+        if (file_exists($custom)) return $custom;
+    }
+    if (is_page_template('page-services.php')) {
+        $custom = get_template_directory() . '/services/page-services.php';
+        if (file_exists($custom)) return $custom;
+    }
+    if (is_singular('product')) {
+        $custom = get_template_directory() . '/product/single-product.php';
+        if (file_exists($custom)) return $custom;
+    }
+    if (is_post_type_archive('product')) {
+        $custom = get_template_directory() . '/products/archive-product.php';
+        if (file_exists($custom)) return $custom;
+    }
+    return $template;
+}
+add_filter('template_include', 'futuristic_it_custom_templates');
+
+// Enqueue Scripts and Styles
+function futuristic_it_scripts() {
+    wp_enqueue_style('futuristic-it-style', get_template_directory_uri() . '/style.css', array(), '1.0.0');
+    
+    // Enqueue Google Fonts
+    wp_enqueue_style('futuristic-it-fonts', 'https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap', array(), null);
+    
+    // Enqueue main JavaScript (no jQuery dependency)
+    wp_enqueue_script('futuristic-it-js', get_template_directory_uri() . '/js/main.js', array(), '1.0.0', true);
+}
+add_action('wp_enqueue_scripts', 'futuristic_it_scripts');
+
+// Gutenberg Block Editor Support
+function futuristic_it_gutenberg_support() {
+    add_theme_support('editor-styles');
+    add_theme_support('align-wide');
+    add_theme_support('wp-block-styles');
+    add_theme_support('responsive-embeds');
+    add_theme_support('editor-color-palette', array(
+        array('name' => 'Dark Green', 'slug' => 'dark-green', 'color' => '#142e1f'),
+        array('name' => 'Primary Green', 'slug' => 'primary-green', 'color' => '#1a3d27'),
+        array('name' => 'Gold', 'slug' => 'gold', 'color' => '#d4a843'),
+        array('name' => 'Gold Dark', 'slug' => 'gold-dark', 'color' => '#b8892f'),
+        array('name' => 'Cream', 'slug' => 'cream', 'color' => '#f7f6f1'),
+        array('name' => 'White', 'slug' => 'white', 'color' => '#ffffff'),
+    ));
+    add_theme_support('editor-font-sizes', array(
+        array('name' => 'Small', 'slug' => 'small', 'size' => 14),
+        array('name' => 'Normal', 'slug' => 'normal', 'size' => 16),
+        array('name' => 'Medium', 'slug' => 'medium', 'size' => 20),
+        array('name' => 'Large', 'slug' => 'large', 'size' => 28),
+        array('name' => 'Huge', 'slug' => 'huge', 'size' => 36),
+    ));
+}
+add_action('after_setup_theme', 'futuristic_it_gutenberg_support');
+
+function futuristic_it_editor_styles() {
+    add_editor_style('editor-style.css');
+}
+add_action('after_setup_theme', 'futuristic_it_editor_styles');
+
+// Register Block Patterns
+function futuristic_it_register_block_patterns() {
+    register_block_pattern_category('futuristic-it', array(
+        'label' => __('Futuristic IT', 'futuristic-it'),
+    ));
+}
+add_action('init', 'futuristic_it_register_block_patterns');
+
+// WordPress Customizer Support
+function futuristic_it_customize_register($wp_customize) {
+
+    // === Homepage Hero Section ===
+    $wp_customize->add_section('futuristic_hero', array(
+        'title'    => __('Homepage – Hero', 'futuristic-it'),
+        'priority' => 30,
+    ));
+
+    $wp_customize->add_setting('custom_hero_tagline', array('default' => 'Welcome to Purposity', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_tagline', array('label' => 'Tagline', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_title_before', array('default' => 'Transforming Ideas into', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_title_before', array('label' => 'Title Before', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_title_highlight', array('default' => 'Intelligent', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_title_highlight', array('label' => 'Title Highlight', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_title_after', array('default' => 'Software Solutions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_title_after', array('label' => 'Title After', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_subtitle', array('default' => 'Leading IT powerhouse in Cambodia delivering innovative technology solutions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_subtitle', array('label' => 'Subtitle', 'section' => 'futuristic_hero', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_hero_btn_text', array('default' => 'Get Started', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_btn_text', array('label' => 'Button 1 Text', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_btn_link', array('default' => '/contact/', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_hero_btn_link', array('label' => 'Button 1 Link', 'section' => 'futuristic_hero', 'type' => 'url'));
+
+    $wp_customize->add_setting('custom_hero_btn2_text', array('default' => 'Our Services', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_btn2_text', array('label' => 'Button 2 Text', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_hero_btn2_link', array('default' => '#services', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_hero_btn2_link', array('label' => 'Button 2 Link', 'section' => 'futuristic_hero', 'type' => 'text'));
+
+    // === Homepage Services Section ===
+    $wp_customize->add_section('futuristic_services', array(
+        'title'    => __('Homepage – Services', 'futuristic-it'),
+        'priority' => 31,
+    ));
+
+    $wp_customize->add_setting('custom_services_tagline', array('default' => 'Why Us', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_tagline', array('label' => 'Tagline', 'section' => 'futuristic_services', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_title', array('default' => 'Our Services', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_title', array('label' => 'Title', 'section' => 'futuristic_services', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_subtitle', array('default' => 'Comprehensive IT & Healthcare Solutions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_subtitle', array('label' => 'Subtitle', 'section' => 'futuristic_services', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_services_cta_text', array('default' => 'Software solution built specifically for your business', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_cta_text', array('label' => 'CTA Text', 'section' => 'futuristic_services', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_cta_link_text', array('default' => 'Find your solution', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_cta_link_text', array('label' => 'CTA Link Text', 'section' => 'futuristic_services', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_cta_link', array('default' => '/services/', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_services_cta_link', array('label' => 'CTA Link URL', 'section' => 'futuristic_services', 'type' => 'url'));
+
+    // === Homepage Products Section ===
+    $wp_customize->add_section('futuristic_products', array(
+        'title'    => __('Homepage – Products', 'futuristic-it'),
+        'priority' => 32,
+    ));
+
+    $wp_customize->add_setting('custom_products_tagline', array('default' => 'Our Products', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_products_tagline', array('label' => 'Tagline', 'section' => 'futuristic_products', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_products_title', array('default' => 'Our Products', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_products_title', array('label' => 'Title', 'section' => 'futuristic_products', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_products_subtitle', array('default' => 'Institutional Product Solutions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_products_subtitle', array('label' => 'Subtitle', 'section' => 'futuristic_products', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_products_cta_text', array('default' => 'Software solution built specifically for your business', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_products_cta_text', array('label' => 'CTA Text', 'section' => 'futuristic_products', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_products_cta_link_text', array('default' => 'Explore our products', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_products_cta_link_text', array('label' => 'CTA Link Text', 'section' => 'futuristic_products', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_products_cta_link', array('default' => '/products/', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_products_cta_link', array('label' => 'CTA Link URL', 'section' => 'futuristic_products', 'type' => 'url'));
+
+    // === Homepage Partners Section ===
+    $wp_customize->add_section('futuristic_partners', array(
+        'title'    => __('Homepage – Partners', 'futuristic-it'),
+        'priority' => 33,
+    ));
+
+    $wp_customize->add_setting('custom_partners_tagline', array('default' => 'Our Partners', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_partners_tagline', array('label' => 'Tagline', 'section' => 'futuristic_partners', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_partners_title', array('default' => 'Our Partners', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_partners_title', array('label' => 'Title', 'section' => 'futuristic_partners', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_partners_subtitle', array('default' => 'Collaborating with industry leaders to protect the next generation of innovation', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_partners_subtitle', array('label' => 'Subtitle', 'section' => 'futuristic_partners', 'type' => 'textarea'));
+
+    // === Homepage CTA / Assurance ===
+    $wp_customize->add_section('futuristic_cta', array(
+        'title'    => __('Homepage – CTA / Assurance', 'futuristic-it'),
+        'priority' => 34,
+    ));
+
+    $wp_customize->add_setting('custom_cta_tagline', array('default' => 'Our IT Assurance', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_tagline', array('label' => 'Tagline', 'section' => 'futuristic_cta', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_cta_title', array('default' => 'Built for Dependable Operation', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_title', array('label' => 'Title', 'section' => 'futuristic_cta', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_cta_subtitle', array('default' => 'Stability in a rapidly evolving digital landscape', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_subtitle', array('label' => 'Subtitle', 'section' => 'futuristic_cta', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_cta_tags', array('default' => 'Bulk Data Migration, Downtime Elimination, Cloud-ready, Data Migration, Integration, Maintenance Plans', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_tags', array('label' => 'Tag Pills (comma separated)', 'section' => 'futuristic_cta', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_cta_box_title', array('default' => 'A Technical Partner After Launch', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_box_title', array('label' => 'Box Title', 'section' => 'futuristic_cta', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_cta_box_btn_text', array('default' => 'Explore Maintenance Plans', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_cta_box_btn_text', array('label' => 'Box Button Text', 'section' => 'futuristic_cta', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_cta_box_btn_link', array('default' => '/contact/', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_cta_box_btn_link', array('label' => 'Box Button Link', 'section' => 'futuristic_cta', 'type' => 'url'));
+
+    // === About Page ===
+    $wp_customize->add_section('futuristic_about', array(
+        'title'    => __('About Page', 'futuristic-it'),
+        'priority' => 35,
+    ));
+
+    $wp_customize->add_setting('custom_about_tagline', array('default' => 'About Futuristic', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_tagline', array('label' => 'Hero Tagline', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_title', array('default' => 'We are a leading IT powerhouse in Cambodia', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_title', array('label' => 'Hero Title', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_subtitle', array('default' => 'We deliver cutting-edge technology solutions that empower businesses across Cambodia and Southeast Asia to move faster, safer, and smarter.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_subtitle', array('label' => 'Hero Subtitle', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_about_story_tagline', array('default' => 'Our Story', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_story_tagline', array('label' => 'Story Tagline', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_our_story', array('default' => 'Innovating to help businesses move forward.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_our_story', array('label' => 'Our Story', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_mission', array('default' => 'Since 2010, Futuristic Investment Co., Ltd. has partnered with organizations across Cambodia to design, build, and support software that holds up under real operating conditions.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_mission', array('label' => 'Mission Paragraph', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_about_vision', array('default' => 'Our team combines local market knowledge with modern engineering practices, so every product we ship is dependable, secure, and genuinely useful to the people who rely on it every day.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_vision', array('label' => 'Vision Paragraph', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_about_philosophy_tagline', array('default' => 'Guiding Principles', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_philosophy_tagline', array('label' => 'Philosophy Tagline', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_philosophy_title', array('default' => 'Our Core Philosophy', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_philosophy_title', array('label' => 'Philosophy Title', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_our_vision', array('default' => 'To be the leading technology partner in Cambodia, recognized for innovation, reliability, and excellence in service delivery.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_our_vision', array('label' => 'Our Vision', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_about_our_mission', array('default' => 'To provide cutting-edge IT and healthcare solutions that empower businesses to thrive in the digital age, backed by responsive, dependable support.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_our_mission', array('label' => 'Our Mission', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_about_journey_tagline', array('default' => 'Our Journey', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_journey_tagline', array('label' => 'Journey Tagline', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_journey_title', array('default' => 'A Decade of Digital Transformation', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_journey_title', array('label' => 'Journey Title', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_team_tagline', array('default' => 'Leadership', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_team_tagline', array('label' => 'Team Tagline', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_team_title', array('default' => 'The Minds Behind Futuristic', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_team_title', array('label' => 'Team Title', 'section' => 'futuristic_about', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_about_team_subtitle', array('default' => 'Meet the experts guiding our strategy, engineering, and client success.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_about_team_subtitle', array('label' => 'Team Subtitle', 'section' => 'futuristic_about', 'type' => 'textarea'));
+
+    // === Services Page ===
+    $wp_customize->add_section('futuristic_services_page', array(
+        'title'    => __('Services Page', 'futuristic-it'),
+        'priority' => 36,
+    ));
+
+    $wp_customize->add_setting('custom_services_hero_tagline', array('default' => 'Our Services', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_hero_tagline', array('label' => 'Hero Tagline', 'section' => 'futuristic_services_page', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_hero_title', array('default' => 'Comprehensive IT & Healthcare Solutions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_hero_title', array('label' => 'Hero Title', 'section' => 'futuristic_services_page', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_hero_subtitle', array('default' => 'End-to-end technology services engineered for your business needs, from strategy through long-term support.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_hero_subtitle', array('label' => 'Hero Subtitle', 'section' => 'futuristic_services_page', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_services_reliable_tagline', array('default' => 'Why Choose Us', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_reliable_tagline', array('label' => 'Reliability Tagline', 'section' => 'futuristic_services_page', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_reliable_title', array('default' => 'Engineered for Reliability', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_reliable_title', array('label' => 'Reliability Title', 'section' => 'futuristic_services_page', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_services_reliable_subtitle', array('default' => 'Every solution we build is designed around stability, security, and ease of use.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_services_reliable_subtitle', array('label' => 'Reliability Subtitle', 'section' => 'futuristic_services_page', 'type' => 'textarea'));
+
+    // === Contact Page ===
+    $wp_customize->add_section('futuristic_contact', array(
+        'title'    => __('Contact Page', 'futuristic-it'),
+        'priority' => 37,
+    ));
+
+    $wp_customize->add_setting('custom_contact_tagline', array('default' => 'Get in Touch', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_tagline', array('label' => 'Hero Tagline', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_title', array('default' => 'Contact Us', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_title', array('label' => 'Hero Title', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_subtitle', array('default' => 'Get in touch with our team for your IT solutions. We usually reply within one business day.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_subtitle', array('label' => 'Hero Subtitle', 'section' => 'futuristic_contact', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_contact_visit', array('default' => 'Phnom Penh, Cambodia', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_visit', array('label' => 'Visit Address', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_phone', array('default' => '+855 12 345 678', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_phone', array('label' => 'Phone', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_hours', array('default' => 'Mon – Fri: 8:00 AM – 6:00 PM', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_hours', array('label' => 'Working Hours', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_email', array('default' => 'info@futuristicit.com', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_email', array('label' => 'Email', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_say_hello', array('default' => 'Say Hello', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_say_hello', array('label' => 'Say Hello Label', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_heading', array('default' => 'We look forward to hearing from you', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_heading', array('label' => 'Contact Heading', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_contact_lead', array('default' => 'Fill out the form and one of our specialists will follow up shortly, or reach us directly using the details below.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_lead', array('label' => 'Contact Lead Text', 'section' => 'futuristic_contact', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_contact_form_title', array('default' => 'Send us a Message', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_contact_form_title', array('label' => 'Form Title', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_faq_title', array('default' => 'Frequently Asked Questions', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_faq_title', array('label' => 'FAQ Title', 'section' => 'futuristic_contact', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_faq_subtitle', array('default' => 'Answers to common questions about getting started.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_faq_subtitle', array('label' => 'FAQ Subtitle', 'section' => 'futuristic_contact', 'type' => 'textarea'));
+
+    // === Homepage Service Cards (Repeater) ===
+    $wp_customize->add_section('futuristic_service_cards', array(
+        'title'    => __('Homepage – Service Cards', 'futuristic-it'),
+        'priority' => 29,
+    ));
+
+    $wp_customize->add_setting('custom_service_cards', array(
+        'default'           => array(
+            array('icon' => '💻', 'title' => 'IT Consulting', 'desc' => 'Strategic technology guidance to optimize your business operations and drive digital transformation.', 'link' => '/services/it-consulting/', 'link_text' => 'Learn More'),
+            array('icon' => '🔧', 'title' => 'Software Development', 'desc' => 'Custom software solutions tailored to your unique business requirements and workflows.', 'link' => '/services/software-development/', 'link_text' => 'Learn More'),
+            array('icon' => '🚀', 'title' => 'Cloud Solutions', 'desc' => 'Scalable cloud infrastructure and migration services for modern enterprises.', 'link' => '/services/cloud-solutions/', 'link_text' => 'Learn More'),
+        ),
+        'sanitize_callback' => 'futuristic_it_sanitize_service_cards',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control(new futuristic_it_repeater_control($wp_customize, 'custom_service_cards_control', array(
+        'label'   => __('Service Cards', 'futuristic-it'),
+        'section' => 'futuristic_service_cards',
+        'settings' => 'custom_service_cards',
+    )));
+
+    // === Header & Footer ===
+    $wp_customize->add_section('futuristic_header_footer', array(
+        'title'    => __('Header & Footer', 'futuristic-it'),
+        'priority' => 38,
+    ));
+
+    $wp_customize->add_setting('custom_logo_subtitle', array('default' => 'Investment Co., Ltd.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_logo_subtitle', array('label' => 'Logo Subtitle', 'section' => 'futuristic_header_footer', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_footer_tagline', array('default' => 'Empowering Cambodian organizations with reliable, localized, and innovative software solutions since 2010.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_footer_tagline', array('label' => 'Footer Tagline', 'section' => 'futuristic_header_footer', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_footer_address', array('default' => '#67, Street 562, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Penh', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_footer_address', array('label' => 'Footer Address', 'section' => 'futuristic_header_footer', 'type' => 'textarea'));
+
+    $wp_customize->add_setting('custom_footer_email', array('default' => 'admin@futurist.com.kh', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_footer_email', array('label' => 'Footer Email', 'section' => 'futuristic_header_footer', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_footer_copyright', array('default' => 'Futuristic Investment Co., Ltd. All rights reserved.', 'sanitize_callback' => 'sanitize_text_field'));
+    $wp_customize->add_control('custom_footer_copyright', array('label' => 'Footer Copyright', 'section' => 'futuristic_header_footer', 'type' => 'text'));
+
+    $wp_customize->add_setting('custom_footer_facebook', array('default' => '#', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_footer_facebook', array('label' => 'Facebook URL', 'section' => 'futuristic_header_footer', 'type' => 'url'));
+
+    $wp_customize->add_setting('custom_footer_linkedin', array('default' => '#', 'sanitize_callback' => 'esc_url_raw'));
+    $wp_customize->add_control('custom_footer_linkedin', array('label' => 'LinkedIn URL', 'section' => 'futuristic_header_footer', 'type' => 'url'));
+}
+add_action('customize_register', 'futuristic_it_customize_register');
+
+// Customizer Live Preview Script
+function futuristic_it_customize_preview_js() {
+    wp_enqueue_script('futuristic-it-customizer', get_template_directory_uri() . '/js/customizer.js', array('customize-preview'), '1.0.0', true);
+}
+add_action('customize_preview_init', 'futuristic_it_customize_preview_js);
+
+// Enqueue Customizer controls script on admin
+function futuristic_it_customize_admin_scripts() {
+    global $pagenow;
+    if ('customize.php' === $pagenow) {
+        wp_enqueue_script('futuristic-it-customizer-controls', get_template_directory_uri() . '/js/customizer-controls.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_script('futuristic-it-customizer-repeater', get_template_directory_uri() . '/js/customizer-repeater.js', array('jquery'), '1.0.0', true);
+        wp_add_inline_style('admin-customizer', '
+            .futuristic-it-repeater-wrap { margin-top: 10px; }
+            .repeater-item { background: #fff; border: 1px solid #ddd; margin-bottom: 8px; border-radius: 4px; }
+            .repeater-item-header { padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; border-bottom: 1px solid #eee; }
+            .repeater-item-header:hover { background: #f0f0f0; }
+            .repeater-item-title { font-weight: 600; font-size: 13px; }
+            .repeater-remove { background: none; border: none; color: #a00; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+            .repeater-remove:hover { color: #dc3232; }
+            .repeater-item-body { padding: 12px; display: none; }
+            .repeater-item.expanded .repeater-item-body { display: block; }
+            .repeater-item-body p { margin: 8px 0; }
+            .repeater-item-body label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: #555; }
+            .repeater-item-body .widefat { width: 100%; }
+        ');
+    }
+}
+add_action('admin_enqueue_scripts', 'futuristic_it_customize_admin_scripts');
+
+// Register Custom Post Type: Services
+function futuristic_it_register_services() {
+    $labels = array(
+        'name' => __('Services', 'futuristic-it'),
+        'singular_name' => __('Service', 'futuristic-it'),
+        'menu_name' => __('Services', 'futuristic-it'),
+        'add_new' => __('Add New', 'futuristic-it'),
+        'add_new_item' => __('Add New Service', 'futuristic-it'),
+        'edit_item' => __('Edit Service', 'futuristic-it'),
+        'new_item' => __('New Service', 'futuristic-it'),
+        'view_item' => __('View Service', 'futuristic-it'),
+        'search_items' => __('Search Services', 'futuristic-it'),
+        'not_found' => __('No services found', 'futuristic-it'),
+        'not_found_in_trash' => __('No services found in Trash', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => true,
+        'publicly_queryable' => true,
+        'query_var' => true,
+        'rewrite' => array('slug' => 'services'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 3,
+        'menu_icon' => 'dashicons-admin-generic',
+        'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
+        'show_in_rest' => true,
+    );
+
+    register_post_type('service', $args);
+}
+add_action('init', 'futuristic_it_register_services');
+
+// Register Custom Post Type: Products
+function futuristic_it_register_products() {
+    $labels = array(
+        'name' => __('Products', 'futuristic-it'),
+        'singular_name' => __('Product', 'futuristic-it'),
+        'menu_name' => __('Products', 'futuristic-it'),
+        'add_new' => __('Add New', 'futuristic-it'),
+        'add_new_item' => __('Add New Product', 'futuristic-it'),
+        'edit_item' => __('Edit Product', 'futuristic-it'),
+        'new_item' => __('New Product', 'futuristic-it'),
+        'view_item' => __('View Product', 'futuristic-it'),
+        'search_items' => __('Search Products', 'futuristic-it'),
+        'not_found' => __('No products found', 'futuristic-it'),
+        'not_found_in_trash' => __('No products found in Trash', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => true,
+        'publicly_queryable' => true,
+        'query_var' => true,
+        'rewrite' => array('slug' => 'products'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 6,
+        'menu_icon' => 'dashicons-cart',
+        'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
+        'show_in_rest' => true,
+    );
+
+    register_post_type('product', $args);
+}
+add_action('init', 'futuristic_it_register_products');
+
+// Register Custom Taxonomy: Product Categories
+function futuristic_it_register_product_categories() {
+    $labels = array(
+        'name' => __('Product Categories', 'futuristic-it'),
+        'singular_name' => __('Product Category', 'futuristic-it'),
+        'menu_name' => __('Categories', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'hierarchical' => true,
+        'public' => true,
+        'rewrite' => array('slug' => 'product-category'),
+        'show_in_rest' => true,
+    );
+
+    register_taxonomy('product_category', 'product', $args);
+}
+add_action('init', 'futuristic_it_register_product_categories');
+
+// Register Custom Post Type: Team Members
+function futuristic_it_register_team() {
+    $labels = array(
+        'name' => __('Team Members', 'futuristic-it'),
+        'singular_name' => __('Team Member', 'futuristic-it'),
+        'menu_name' => __('Team', 'futuristic-it'),
+        'add_new' => __('Add New', 'futuristic-it'),
+        'add_new_item' => __('Add New Team Member', 'futuristic-it'),
+        'edit_item' => __('Edit Team Member', 'futuristic-it'),
+        'new_item' => __('New Team Member', 'futuristic-it'),
+        'view_item' => __('View Team Member', 'futuristic-it'),
+        'search_items' => __('Search Team Members', 'futuristic-it'),
+        'not_found' => __('No team members found', 'futuristic-it'),
+        'not_found_in_trash' => __('No team members found in Trash', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => false,
+        'publicly_queryable' => true,
+        'query_var' => true,
+        'rewrite' => array('slug' => 'team'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 7,
+        'menu_icon' => 'dashicons-groups',
+        'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
+        'show_in_rest' => true,
+    );
+
+    register_post_type('team', $args);
+}
+add_action('init', 'futuristic_it_register_team');
+
+// Register Custom Post Type: Partners
+function futuristic_it_register_partners() {
+    $labels = array(
+        'name' => __('Partners', 'futuristic-it'),
+        'singular_name' => __('Partner', 'futuristic-it'),
+        'menu_name' => __('Partners', 'futuristic-it'),
+        'add_new' => __('Add New', 'futuristic-it'),
+        'add_new_item' => __('Add New Partner', 'futuristic-it'),
+        'edit_item' => __('Edit Partner', 'futuristic-it'),
+        'new_item' => __('New Partner', 'futuristic-it'),
+        'view_item' => __('View Partner', 'futuristic-it'),
+        'search_items' => __('Search Partners', 'futuristic-it'),
+        'not_found' => __('No partners found', 'futuristic-it'),
+        'not_found_in_trash' => __('No partners found in Trash', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => false,
+        'publicly_queryable' => false,
+        'query_var' => false,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 8,
+        'menu_icon' => 'dashicons-businessperson',
+        'supports' => array('title', 'thumbnail'),
+        'show_in_rest' => true,
+    );
+
+    register_post_type('partner', $args);
+}
+add_action('init', 'futuristic_it_register_partners');
+
+// Register Custom Post Type: CTA Features
+// Powers the 3-item list inside the "Built for Dependable Operation"
+// assurance box on the homepage (Priority Support / Skill Training / Regular Updates).
+function futuristic_it_register_cta_features() {
+    $labels = array(
+        'name' => __('CTA Features', 'futuristic-it'),
+        'singular_name' => __('CTA Feature', 'futuristic-it'),
+        'menu_name' => __('CTA Features', 'futuristic-it'),
+        'add_new' => __('Add New', 'futuristic-it'),
+        'add_new_item' => __('Add New CTA Feature', 'futuristic-it'),
+        'edit_item' => __('Edit CTA Feature', 'futuristic-it'),
+        'new_item' => __('New CTA Feature', 'futuristic-it'),
+        'view_item' => __('View CTA Feature', 'futuristic-it'),
+        'search_items' => __('Search CTA Features', 'futuristic-it'),
+        'not_found' => __('No CTA features found', 'futuristic-it'),
+        'not_found_in_trash' => __('No CTA features found in Trash', 'futuristic-it'),
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => false,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'publicly_queryable' => false,
+        'query_var' => false,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 9,
+        'menu_icon' => 'dashicons-yes-alt',
+        'supports' => array('title', 'editor', 'page-attributes'),
+        'show_in_rest' => true,
+    );
+
+    register_post_type('cta_feature', $args);
+}
+add_action('init', 'futuristic_it_register_cta_features');
+
+// Add custom fields for products
+function futuristic_it_add_product_meta_boxes() {
+    add_meta_box(
+        'product_details',
+        __('Product Details', 'futuristic-it'),
+        'futuristic_it_product_meta_box_callback',
+        'product',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'futuristic_it_add_product_meta_boxes');
+
+function futuristic_it_product_meta_box_callback($post) {
+    wp_nonce_field('futuristic_it_product_meta_box', 'futuristic_it_product_meta_box_nonce');
+    
+    $price = get_post_meta($post->ID, '_product_price', true);
+    $features = get_post_meta($post->ID, '_product_features', true);
+    
+    echo '<label for="product_price">' . __('Price:', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="product_price" name="product_price" value="' . esc_attr($price) . '" class="widefat" style="margin-bottom: 15px;">';
+    
+    echo '<label for="product_features">' . __('Features (one per line):', 'futuristic-it') . '</label>';
+    echo '<textarea id="product_features" name="product_features" class="widefat" rows="5">' . esc_textarea($features) . '</textarea>';
+}
+
+function futuristic_it_save_product_meta($post_id) {
+    if (!isset($_POST['futuristic_it_product_meta_box_nonce'])) {
+        return;
+    }
+    
+    if (!wp_verify_nonce($_POST['futuristic_it_product_meta_box_nonce'], 'futuristic_it_product_meta_box')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['product_price'])) {
+        update_post_meta($post_id, '_product_price', sanitize_text_field($_POST['product_price']));
+    }
+    
+    if (isset($_POST['product_features'])) {
+        update_post_meta($post_id, '_product_features', sanitize_textarea_field($_POST['product_features']));
+    }
+}
+add_action('save_post', 'futuristic_it_save_product_meta');
+
+// Add custom fields for team members
+function futuristic_it_add_team_meta_boxes() {
+    add_meta_box(
+        'team_details',
+        __('Team Member Details', 'futuristic-it'),
+        'futuristic_it_team_meta_box_callback',
+        'team',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'futuristic_it_add_team_meta_boxes');
+
+function futuristic_it_team_meta_box_callback($post) {
+    wp_nonce_field('futuristic_it_team_meta_box', 'futuristic_it_team_meta_box_nonce');
+    
+    $role = get_post_meta($post->ID, '_team_role', true);
+    
+    echo '<label for="team_role">' . __('Role/Position:', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="team_role" name="team_role" value="' . esc_attr($role) . '" class="widefat">';
+}
+
+function futuristic_it_save_team_meta($post_id) {
+    if (!isset($_POST['futuristic_it_team_meta_box_nonce'])) {
+        return;
+    }
+    
+    if (!wp_verify_nonce($_POST['futuristic_it_team_meta_box_nonce'], 'futuristic_it_team_meta_box')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['team_role'])) {
+        update_post_meta($post_id, '_team_role', sanitize_text_field($_POST['team_role']));
+    }
+}
+add_action('save_post', 'futuristic_it_save_team_meta');
+
+// Add custom fields for services
+function futuristic_it_add_service_meta_boxes() {
+    add_meta_box(
+        'service_icon',
+        __('Service Details', 'futuristic-it'),
+        'futuristic_it_service_meta_box_callback',
+        'service',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'futuristic_it_add_service_meta_boxes');
+
+function futuristic_it_service_meta_box_callback($post) {
+    wp_nonce_field('futuristic_it_service_meta_box', 'futuristic_it_service_meta_box_nonce');
+    
+    $icon = get_post_meta($post->ID, '_service_icon', true);
+    $link = get_post_meta($post->ID, '_service_link', true);
+    $link_text = get_post_meta($post->ID, '_service_link_text', true);
+    
+    echo '<label for="service_icon">' . __('Icon (emoji or character):', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="service_icon" name="service_icon" value="' . esc_attr($icon) . '" class="widefat" placeholder="e.g., 💻, 🔧, 🚀" style="margin-bottom: 15px;">';
+
+    echo '<label for="service_link">' . __('Learn More Link URL (optional, defaults to the service page):', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="service_link" name="service_link" value="' . esc_attr($link) . '" class="widefat" placeholder="/services/it-consulting/" style="margin-bottom: 15px;">';
+
+    echo '<label for="service_link_text">' . __('Learn More Link Text:', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="service_link_text" name="service_link_text" value="' . esc_attr($link_text) . '" class="widefat" placeholder="Learn More">';
+}
+
+function futuristic_it_save_service_meta($post_id) {
+    if (!isset($_POST['futuristic_it_service_meta_box_nonce'])) {
+        return;
+    }
+    
+    if (!wp_verify_nonce($_POST['futuristic_it_service_meta_box_nonce'], 'futuristic_it_service_meta_box')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['service_icon'])) {
+        update_post_meta($post_id, '_service_icon', sanitize_text_field($_POST['service_icon']));
+    }
+    
+    if (isset($_POST['service_link'])) {
+        update_post_meta($post_id, '_service_link', sanitize_text_field($_POST['service_link']));
+    }
+    
+    if (isset($_POST['service_link_text'])) {
+        update_post_meta($post_id, '_service_link_text', sanitize_text_field($_POST['service_link_text']));
+    }
+}
+add_action('save_post', 'futuristic_it_save_service_meta');
+
+// Add custom fields for CTA features (icon shown next to each bullet
+// in the "Built for Dependable Operation" assurance box)
+function futuristic_it_add_cta_feature_meta_boxes() {
+    add_meta_box(
+        'cta_feature_icon',
+        __('CTA Feature Icon', 'futuristic-it'),
+        'futuristic_it_cta_feature_meta_box_callback',
+        'cta_feature',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'futuristic_it_add_cta_feature_meta_boxes');
+
+function futuristic_it_cta_feature_meta_box_callback($post) {
+    wp_nonce_field('futuristic_it_cta_feature_meta_box', 'futuristic_it_cta_feature_meta_box_nonce');
+    
+    $icon = get_post_meta($post->ID, '_cta_icon', true);
+    
+    echo '<label for="cta_icon">' . __('Icon (emoji or character):', 'futuristic-it') . '</label>';
+    echo '<input type="text" id="cta_icon" name="cta_icon" value="' . esc_attr($icon) . '" class="widefat" placeholder="e.g., 🎧, 🎓, 🔄">';
+    echo '<p class="description">' . __('The item title uses the Title field above, and the short description uses the main Content editor.', 'futuristic-it') . '</p>';
+}
+
+function futuristic_it_save_cta_feature_meta($post_id) {
+    if (!isset($_POST['futuristic_it_cta_feature_meta_box_nonce'])) {
+        return;
+    }
+    
+    if (!wp_verify_nonce($_POST['futuristic_it_cta_feature_meta_box_nonce'], 'futuristic_it_cta_feature_meta_box')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['cta_icon'])) {
+        update_post_meta($post_id, '_cta_icon', sanitize_text_field($_POST['cta_icon']));
+    }
+}
+add_action('save_post', 'futuristic_it_save_cta_feature_meta');
+
+// ---------------------------------------------------------------------
+// Homepage Content (Theme Options)
+// One-off, site-wide text used on the homepage: hero copy, section
+// taglines/subtitles, the CTA bars under Services/Products, the tag
+// pills, and the assurance box button — everything that isn't tied
+// to a repeating post type.
+// ---------------------------------------------------------------------
+function futuristic_it_theme_option_fields() {
+    return array(
+        // Hero
+        'purposity_hero_tagline'         => 'Welcome to Purposity',
+        'purposity_hero_title_before'    => 'Transforming Ideas into',
+        'purposity_hero_title_highlight' => 'Intelligent',
+        'purposity_hero_title_after'     => 'Software Solutions',
+        'purposity_hero_subtitle'        => 'Leading IT powerhouse in Cambodia delivering innovative technology solutions',
+        'purposity_hero_btn_text'        => 'Get Started',
+        'purposity_hero_btn_link'        => '/contact/',
+        'purposity_hero_btn2_text'       => 'Our Services',
+        'purposity_hero_btn2_link'       => '#services',
+        // Services
+        'purposity_services_tagline'       => 'Why Us',
+        'purposity_services_title'         => 'Our Services',
+        'purposity_services_subtitle'      => 'Comprehensive IT & Healthcare Solutions',
+        'purposity_services_cta_text'      => 'Software solution built specifically for your business',
+        'purposity_services_cta_link_text' => 'Find your solution',
+        'purposity_services_cta_link'      => '/services/',
+        // Products
+        'purposity_products_tagline'       => 'Our Products',
+        'purposity_products_title'         => 'Our Products',
+        'purposity_products_subtitle'      => 'Institutional Product Solutions',
+        'purposity_products_cta_text'      => 'Software solution built specifically for your business',
+        'purposity_products_cta_link_text' => 'Explore our products',
+        'purposity_products_cta_link'      => '/products/',
+        // Partners
+        'purposity_partners_tagline'  => 'Our Partners',
+        'purposity_partners_title'    => 'Our Partners',
+        'purposity_partners_subtitle' => 'Collaborating with industry leaders to protect the next generation of innovation',
+        // Final CTA / Assurance box
+        'purposity_cta_tagline'      => 'Our IT Assurance',
+        'purposity_cta_title'        => 'Built for Dependable Operation',
+        'purposity_cta_subtitle'     => 'Stability in a rapidly evolving digital landscape',
+        'purposity_cta_tags'         => 'Bulk Data Migration, Downtime Elimination, Cloud-ready, Data Migration, Integration, Maintenance Plans',
+        'purposity_cta_box_title'    => 'A Technical Partner After Launch',
+        'purposity_cta_box_btn_text' => 'Explore Maintenance Plans',
+        'purposity_cta_box_btn_link' => '/contact/',
+
+        // Header
+        'futuristic_logo_subtitle' => 'Investment Co., Ltd.',
+
+        // Footer
+        'futuristic_footer_tagline' => 'Empowering Cambodian organizations with reliable, localized, and innovative software solutions since 2010.',
+        'futuristic_footer_address' => '#67, Street 562, Sangkat Boeung Kak II<br>Khan Toul Kork, Phnom Penh',
+        'futuristic_footer_email'   => 'admin@futurist.com.kh',
+        'futuristic_footer_copyright' => 'Futuristic Investment Co., Ltd. All rights reserved.',
+        'futuristic_footer_facebook'  => '#',
+        'futuristic_footer_linkedin'  => '#',
+        'futuristic_footer_quicklinks_title' => 'Quick Links',
+        'futuristic_footer_contact_title'    => 'Contact',
+
+        // Contact Page
+        'futuristic_contact_tagline'   => 'Get in Touch',
+        'futuristic_contact_title'     => 'Contact Us',
+        'futuristic_contact_subtitle'  => 'Get in touch with our team for your IT solutions. We usually reply within one business day.',
+        'futuristic_contact_visit'     => 'Phnom Penh, Cambodia',
+        'futuristic_contact_phone'     => '+855 12 345 678',
+        'futuristic_contact_hours'     => 'Mon – Fri: 8:00 AM – 6:00 PM',
+        'futuristic_contact_email'     => 'info@futuristicit.com',
+        'futuristic_contact_heading'   => 'We look forward to hearing from you',
+        'futuristic_contact_lead'      => 'Fill out the form and one of our specialists will follow up shortly, or reach us directly using the details below.',
+        'futuristic_faq_title'         => 'Frequently Asked Questions',
+        'futuristic_faq_subtitle'      => 'Answers to common questions about getting started.',
+        'futuristic_contact_say_hello' => 'Say Hello',
+        'futuristic_contact_form_title' => 'Send us a Message',
+        'futuristic_contact_visit_label' => 'Visit',
+        'futuristic_contact_ring_label'  => 'Ring Anytime',
+        'futuristic_contact_hours_label' => 'Working Hours',
+        'futuristic_contact_address_label' => 'Address',
+        'futuristic_contact_phone_label'   => 'Phone',
+        'futuristic_contact_email_label'   => 'Email',
+        'futuristic_about_story_tagline' => 'Our Story',
+        'futuristic_about_get_in_touch'  => 'Get in Touch',
+
+        // Services Page
+        'futuristic_services_hero_tagline'   => 'Our Services',
+        'futuristic_services_hero_title'     => 'Comprehensive IT & Healthcare Solutions',
+        'futuristic_services_hero_subtitle'  => 'End-to-end technology services engineered for your business needs, from strategy through long-term support.',
+        'futuristic_services_reliable_tagline' => 'Why Choose Us',
+        'futuristic_services_reliable_title'   => 'Engineered for Reliability',
+        'futuristic_services_reliable_subtitle'=> 'Every solution we build is designed around stability, security, and ease of use.',
+
+        // About Page
+        'futuristic_about_tagline'  => 'About Futuristic',
+        'futuristic_about_title'    => 'We are a leading IT powerhouse in Cambodia',
+        'futuristic_about_subtitle' => 'We deliver cutting-edge technology solutions that empower businesses across Cambodia and Southeast Asia to move faster, safer, and smarter.',
+        'futuristic_about_our_story'  => 'Innovating to help businesses move forward.',
+        'futuristic_about_mission'    => 'Since 2010, Futuristic Investment Co., Ltd. has partnered with organizations across Cambodia to design, build, and support software that holds up under real operating conditions.',
+        'futuristic_about_vision'     => 'Our team combines local market knowledge with modern engineering practices, so every product we ship is dependable, secure, and genuinely useful to the people who rely on it every day.',
+        'futuristic_about_philosophy_tagline' => 'Guiding Principles',
+        'futuristic_about_philosophy_title'   => 'Our Core Philosophy',
+        'futuristic_about_our_vision'  => 'To be the leading technology partner in Cambodia, recognized for innovation, reliability, and excellence in service delivery.',
+        'futuristic_about_our_mission' => 'To provide cutting-edge IT and healthcare solutions that empower businesses to thrive in the digital age, backed by responsive, dependable support.',
+        'futuristic_about_journey_tagline' => 'Our Journey',
+        'futuristic_about_journey_title'   => 'A Decade of Digital Transformation',
+        'futuristic_about_team_tagline'    => 'Leadership',
+        'futuristic_about_team_title'      => 'The Minds Behind Futuristic',
+        'futuristic_about_team_subtitle'   => 'Meet the experts guiding our strategy, engineering, and client success.',
+    );
+}
+
+function futuristic_it_add_theme_options_page() {
+    add_menu_page(
+        __('Site Content', 'futuristic-it'),
+        __('Site Content', 'futuristic-it'),
+        'manage_options',
+        'futuristic-it-theme-options',
+        'futuristic_it_render_theme_options_page',
+        'dashicons-admin-customizer',
+        59
+    );
+}
+add_action('admin_menu', 'futuristic_it_add_theme_options_page');
+
+function futuristic_it_register_theme_options() {
+    foreach (array_keys(futuristic_it_theme_option_fields()) as $field) {
+        register_setting('futuristic_it_theme_options_group', $field, 'sanitize_text_field');
+    }
+    // Register dynamic FAQ options
+    for ($i = 1; $i <= 5; $i++) {
+        register_setting('futuristic_it_theme_options_group', 'contact_faq_' . $i . '_q', 'sanitize_text_field');
+        register_setting('futuristic_it_theme_options_group', 'contact_faq_' . $i . '_a', 'sanitize_textarea_field');
+    }
+    // Register about FAQ options
+    for ($i = 1; $i <= 5; $i++) {
+        register_setting('futuristic_it_theme_options_group', 'about_faq_' . $i . '_q', 'sanitize_text_field');
+        register_setting('futuristic_it_theme_options_group', 'about_faq_' . $i . '_a', 'sanitize_textarea_field');
+    }
+    // Register about timeline options
+    for ($i = 1; $i <= 6; $i++) {
+        register_setting('futuristic_it_theme_options_group', 'about_timeline_' . $i . '_year', 'sanitize_text_field');
+        register_setting('futuristic_it_theme_options_group', 'about_timeline_' . $i . '_text', 'sanitize_textarea_field');
+    }
+    // Register services reliability points
+    for ($i = 1; $i <= 6; $i++) {
+        register_setting('futuristic_it_theme_options_group', 'services_reliability_' . $i . '_title', 'sanitize_text_field');
+        register_setting('futuristic_it_theme_options_group', 'services_reliability_' . $i . '_text', 'sanitize_textarea_field');
+    }
+}
+add_action('admin_init', 'futuristic_it_register_theme_options');
+
+function futuristic_it_render_theme_options_page() {
+    $sections = array(
+        'Header & Footer' => array(
+            'futuristic_logo_subtitle',
+            'futuristic_footer_tagline',
+            'futuristic_footer_address',
+            'futuristic_footer_email',
+            'futuristic_footer_copyright',
+            'futuristic_footer_facebook',
+            'futuristic_footer_linkedin',
+            'futuristic_footer_quicklinks_title',
+            'futuristic_footer_contact_title',
+        ),
+        'Homepage – Hero' => array(
+            'purposity_hero_tagline',
+            'purposity_hero_title_before',
+            'purposity_hero_title_highlight',
+            'purposity_hero_title_after',
+            'purposity_hero_subtitle',
+            'purposity_hero_btn_text',
+            'purposity_hero_btn_link',
+            'purposity_hero_btn2_text',
+            'purposity_hero_btn2_link',
+        ),
+        'Homepage – Services Section' => array(
+            'purposity_services_tagline',
+            'purposity_services_title',
+            'purposity_services_subtitle',
+            'purposity_services_cta_text',
+            'purposity_services_cta_link_text',
+            'purposity_services_cta_link',
+        ),
+        'Homepage – Products Section' => array(
+            'purposity_products_tagline',
+            'purposity_products_title',
+            'purposity_products_subtitle',
+            'purposity_products_cta_text',
+            'purposity_products_cta_link_text',
+            'purposity_products_cta_link',
+        ),
+        'Homepage – Partners Section' => array(
+            'purposity_partners_tagline',
+            'purposity_partners_title',
+            'purposity_partners_subtitle',
+        ),
+        'Homepage – CTA / Assurance' => array(
+            'purposity_cta_tagline',
+            'purposity_cta_title',
+            'purposity_cta_subtitle',
+            'purposity_cta_tags',
+            'purposity_cta_box_title',
+            'purposity_cta_box_btn_text',
+            'purposity_cta_box_btn_link',
+        ),
+        'Contact Page' => array(
+            'futuristic_contact_tagline',
+            'futuristic_contact_title',
+            'futuristic_contact_subtitle',
+            'futuristic_contact_visit',
+            'futuristic_contact_phone',
+            'futuristic_contact_hours',
+            'futuristic_contact_email',
+            'futuristic_contact_heading',
+            'futuristic_contact_lead',
+            'futuristic_contact_say_hello',
+            'futuristic_contact_form_title',
+            'futuristic_contact_visit_label',
+            'futuristic_contact_ring_label',
+            'futuristic_contact_hours_label',
+            'futuristic_contact_address_label',
+            'futuristic_contact_phone_label',
+            'futuristic_contact_email_label',
+            'futuristic_faq_title',
+            'futuristic_faq_subtitle',
+        ),
+        'Contact FAQ (up to 5)' => array(
+            'contact_faq_1_q', 'contact_faq_1_a',
+            'contact_faq_2_q', 'contact_faq_2_a',
+            'contact_faq_3_q', 'contact_faq_3_a',
+            'contact_faq_4_q', 'contact_faq_4_a',
+            'contact_faq_5_q', 'contact_faq_5_a',
+        ),
+        'Services Page' => array(
+            'futuristic_services_hero_tagline',
+            'futuristic_services_hero_title',
+            'futuristic_services_hero_subtitle',
+            'futuristic_services_reliable_tagline',
+            'futuristic_services_reliable_title',
+            'futuristic_services_reliable_subtitle',
+        ),
+        'Services Reliability Points (up to 6)' => array(
+            'services_reliability_1_title', 'services_reliability_1_text',
+            'services_reliability_2_title', 'services_reliability_2_text',
+            'services_reliability_3_title', 'services_reliability_3_text',
+            'services_reliability_4_title', 'services_reliability_4_text',
+            'services_reliability_5_title', 'services_reliability_5_text',
+            'services_reliability_6_title', 'services_reliability_6_text',
+        ),
+        'About Page' => array(
+            'futuristic_about_tagline',
+            'futuristic_about_title',
+            'futuristic_about_subtitle',
+            'futuristic_about_story_tagline',
+            'futuristic_about_our_story',
+            'futuristic_about_mission',
+            'futuristic_about_vision',
+            'futuristic_about_philosophy_tagline',
+            'futuristic_about_philosophy_title',
+            'futuristic_about_our_vision',
+            'futuristic_about_our_mission',
+            'futuristic_about_journey_tagline',
+            'futuristic_about_journey_title',
+            'futuristic_about_team_tagline',
+            'futuristic_about_team_title',
+            'futuristic_about_team_subtitle',
+            'futuristic_about_get_in_touch',
+        ),
+        'About Timeline (up to 6)' => array(
+            'about_timeline_1_year', 'about_timeline_1_text',
+            'about_timeline_2_year', 'about_timeline_2_text',
+            'about_timeline_3_year', 'about_timeline_3_text',
+            'about_timeline_4_year', 'about_timeline_4_text',
+            'about_timeline_5_year', 'about_timeline_5_text',
+            'about_timeline_6_year', 'about_timeline_6_text',
+        ),
+        'About FAQ (up to 5)' => array(
+            'about_faq_1_q', 'about_faq_1_a',
+            'about_faq_2_q', 'about_faq_2_a',
+            'about_faq_3_q', 'about_faq_3_a',
+            'about_faq_4_q', 'about_faq_4_a',
+            'about_faq_5_q', 'about_faq_5_a',
+        ),
+    );
+
+    $fields = futuristic_it_theme_option_fields();
+    ?>
+    <div class="wrap">
+        <h1><?php _e('Site Content', 'futuristic-it'); ?></h1>
+        <p><?php _e('Manage all editable text across the site. Each section corresponds to a part of the website.', 'futuristic-it'); ?></p>
+        <form method="post" action="options.php">
+            <?php settings_fields('futuristic_it_theme_options_group'); ?>
+            <?php foreach ($sections as $section_title => $field_keys) : ?>
+                <h2 style="margin-top: 24px; padding-bottom: 8px; border-bottom: 1px solid #ccd0d4;"><?php echo esc_html($section_title); ?></h2>
+                <table class="form-table">
+                    <?php foreach ($field_keys as $field) :
+                        $default = isset($fields[$field]) ? $fields[$field] : '';
+                        $value = get_option($field, $default);
+                        $is_textarea = strpos($field, 'subtitle') !== false || strpos($field, 'lead') !== false || strpos($field, '_text') !== false || strpos($field, 'tagline') !== false || strpos($field, 'mission') !== false || strpos($field, 'vision') !== false;
+                    ?>
+                        <tr>
+                            <th scope="row">
+                                <label for="<?php echo esc_attr($field); ?>">
+                                    <?php echo esc_html(ucwords(str_replace(array('purposity_', 'futuristic_'), '', str_replace('_', ' ', $field)))); ?>
+                                </label>
+                            </th>
+                            <td>
+                                <?php if ($is_textarea) : ?>
+                                    <textarea class="large-text" id="<?php echo esc_attr($field); ?>" name="<?php echo esc_attr($field); ?>" rows="3"><?php echo esc_textarea($value); ?></textarea>
+                                <?php else : ?>
+                                    <input type="text" class="regular-text" id="<?php echo esc_attr($field); ?>" name="<?php echo esc_attr($field); ?>" value="<?php echo esc_attr($value); ?>">
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            <?php endforeach; ?>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <?php
+}

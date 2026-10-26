@@ -1,0 +1,180 @@
+/* ==========================================================================
+   Floating Contact Buttons (Messenger, Telegram, ...)
+   Managed from: WP Admin -> Futuristict Website -> Floating Buttons
+   Kept as a standalone stylesheet so no Tailwind rebuild is required.
+   ========================================================================== */
+
+/* The shared fixed column that holds the floating buttons AND the
+   back-to-top button, so the two can never overlap. */
+.fc-dock {
+    position: fixed;
+    bottom: var(--fc-bottom, 30px);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none; /* children re-enable */
+}
+
+.fc-dock.fc-pos-right {
+    right: var(--fc-side, 30px);
+}
+
+.fc-dock.fc-pos-left {
+    left: var(--fc-side, 30px);
+}
+
+.fc-dock > * {
+    pointer-events: auto;
+}
+
+/* ---- Floating button widget ---- */
+.fc-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    /* Buttons stack upward from the bottom of the dock */
+    order: 1;
+}
+
+.fc-btn {
+    position: relative;
+    width: var(--fc-size, 52px);
+    height: var(--fc-size, 52px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fc-btn:hover,
+.fc-btn:focus-visible {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+
+.fc-btn:focus-visible {
+    outline: 2px solid var(--gold, #d4a843);
+    outline-offset: 2px;
+}
+
+.fc-btn svg {
+    width: 55%;
+    height: 55%;
+    display: block;
+    fill: currentColor;
+}
+
+/* ---- Brand colors ---- */
+.fc-btn.fc-messenger { background: #0084ff; }
+.fc-btn.fc-telegram  { background: #229ed9; }
+.fc-btn.fc-whatsapp  { background: #25d366; }
+.fc-btn.fc-zalo      { background: #0068ff; }
+.fc-btn.fc-line      { background: #06c755; }
+.fc-btn.fc-viber     { background: #7360f2; }
+.fc-btn.fc-phone     { background: var(--dark-green, #083321); }
+.fc-btn.fc-email     { background: var(--gold-dark, #b8892f); }
+
+/* ---- Hover label ---- */
+.fc-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(0.9);
+    background: rgba(20, 46, 31, 0.95);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+}
+
+/* Label sits on the inner side, away from the screen edge */
+.fc-pos-right .fc-label {
+    right: calc(100% + 12px);
+    transform-origin: right center;
+}
+
+.fc-pos-left .fc-label {
+    left: calc(100% + 12px);
+    transform-origin: left center;
+}
+
+.fc-btn:hover .fc-label,
+.fc-btn:focus-visible .fc-label {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) scale(1);
+}
+
+/* ---- Back-to-top inside the dock ---- */
+.fc-dock #back-to-top {
+    position: static;
+    display: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    background: var(--dark-green, #142e1f);
+    box-shadow: 0 4px 16px rgba(180, 137, 47, 0.4);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    order: 0; /* sits above the contact buttons */
+}
+
+.fc-dock #back-to-top.is-visible {
+    display: flex;
+}
+
+.fc-dock #back-to-top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(180, 137, 47, 0.55);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 480px) {
+    .fc-dock {
+        bottom: var(--fc-bottom-mobile, 20px);
+    }
+
+    .fc-dock.fc-pos-right {
+        right: 16px;
+    }
+
+    .fc-dock.fc-pos-left {
+        left: 16px;
+    }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+    .fc-btn,
+    .fc-dock #back-to-top,
+    .fc-label {
+        transition: none;
+    }
+
+    .fc-btn:hover,
+    .fc-btn:focus-visible,
+    .fc-dock #back-to-top:hover {
+        transform: none;
+    }
+}

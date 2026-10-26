@@ -1,0 +1,210 @@
+/*
+ * Futuristic IT Theme - Gutenberg Editor Styles
+ */
+
+:root {
+    --dark-green: #142e1f;
+    --primary-green: #1a3d27;
+    --green-700: #285d38;
+    --gold: #d4a843;
+    --gold-dark: #b8892f;
+    --gold-light: #e8c876;
+    --cream: #f7f6f1;
+    --cream-dark: #efede4;
+    --white: #ffffff;
+    --text-dark: #1a2620;
+    --text-body: #4a5750;
+    --text-gray: #6f7a74;
+    --text-on-dark: rgba(255, 255, 255, 0.92);
+    --text-on-dark-soft: rgba(255, 255, 255, 0.68);
+    --border-color: #e6e4da;
+    --border-on-dark: rgba(255, 255, 255, 0.12);
+    --radius: 10px;
+    --radius-sm: 6px;
+}
+
+.editor-styles-wrapper {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.65;
+    color: var(--text-body);
+}
+
+.editor-styles-wrapper h1,
+.editor-styles-wrapper h2,
+.editor-styles-wrapper h3,
+.editor-styles-wrapper h4 {
+    color: var(--text-dark);
+    line-height: 1.25;
+}
+
+.editor-styles-wrapper a {
+    color: var(--dark-green);
+    text-decoration: none;
+}
+
+.editor-styles-wrapper a:hover {
+    color: var(--gold-dark);
+}
+
+/* Hero Section in Editor */
+.editor-styles-wrapper .wp-block-group.has-dark-green-background-color,
+.editor-styles-wrapper .wp-block-cover.has-dark-green-background-color {
+    background-color: var(--dark-green) !important;
+    color: var(--white);
+}
+
+.editor-styles-wrapper .wp-block-group.has-gold-background-color,
+.editor-styles-wrapper .wp-block-button__link.has-gold-background-color {
+    background-color: var(--gold) !important;
+    color: var(--dark-green) !important;
+}
+
+/* Section Eyebrow */
+.editor-styles-wrapper .wp-block-heading.has-gold-dark-color {
+    color: var(--gold-dark) !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Buttons */
+.editor-styles-wrapper .wp-block-button__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.25s ease;
+}
+
+.editor-styles-wrapper .wp-block-button__link.has-gold-background-color {
+    background-color: var(--gold) !important;
+    color: var(--dark-green) !important;
+}
+
+.editor-styles-wrapper .wp-block-button__link.has-dark-green-background-color {
+    background-color: var(--dark-green) !important;
+    color: var(--white) !important;
+}
+
+/* Columns */
+.editor-styles-wrapper .wp-block-columns {
+    gap: 28px;
+}
+
+/* Group Blocks */
+.editor-styles-wrapper .wp-block-group {
+    padding: 90px 0;
+}
+
+.editor-styles-wrapper .wp-block-group.has-cream-background-color {
+    background-color: var(--cream) !important;
+}
+
+.editor-styles-wrapper .wp-block-group.has-dark-green-background-color {
+    background-color: var(--dark-green) !important;
+    color: var(--white);
+}
+
+.editor-styles-wrapper .wp-block-group.has-dark-green-background-color h2,
+.editor-styles-wrapper .wp-block-group.has-dark-green-background-color h3 {
+    color: var(--white);
+}
+
+/* Cover Block */
+.editor-styles-wrapper .wp-block-cover {
+    min-height: 400px;
+}
+
+.editor-styles-wrapper .wp-block-cover__inner-container {
+    color: var(--white);
+}
+
+/* List Blocks */
+.editor-styles-wrapper .wp-block-list li {
+    padding: 8px 0;
+}
+
+.editor-styles-wrapper .wp-block-list li::before {
+    content: '—';
+    color: var(--gold);
+    margin-right: 10px;
+}
+
+/* Separator */
+.editor-styles-wrapper .wp-block-separator {
+    border-color: var(--border-color);
+}
+
+.editor-styles-wrapper .wp-block-separator.is-style-wide {
+    border-width: 1px;
+}
+
+/* Quote */
+.editor-styles-wrapper .wp-block-quote {
+    border-left: 4px solid var(--gold);
+    padding-left: 20px;
+}
+
+.editor-styles-wrapper .wp-block-quote cite {
+    color: var(--gold-dark);
+    font-size: 0.85rem;
+}
+
+/* Image */
+.editor-styles-wrapper .wp-block-image img {
+    border-radius: var(--radius);
+}
+
+/* Table */
+.editor-styles-wrapper .wp-block-table th {
+    background-color: var(--dark-green);
+    color: var(--white);
+    padding: 12px 16px;
+}
+
+.editor-styles-wrapper .wp-block-table td {
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+}
+
+/* Wide and Full Width */
+.editor-styles-wrapper .alignwide {
+    max-width: 1200px;
+}
+
+.editor-styles-wrapper .alignfull {
+    width: 100%;
+}
+
+/* Card Styles */
+.editor-styles-wrapper .wp-block-group.is-style-futuristic-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 34px 30px;
+    transition: all 0.25s ease;
+}
+
+.editor-styles-wrapper .wp-block-group.is-style-futuristic-card-dark {
+    background: var(--dark-green);
+    color: var(--white);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+}
+
+/* Tag Pills */
+.editor-styles-wrapper .wp-block-buttons .wp-block-button__link.is-style-futuristic-pill {
+    background: var(--cream-dark);
+    color: var(--text-dark);
+    padding: 9px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+}
