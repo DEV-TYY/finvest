@@ -299,7 +299,7 @@ function initTheme() {
                     var courseNameWidget = jQuery('#course-name-select').data('searchableSelect');
                     var locationInput = document.getElementById('location');
                     var optBoxes = document.querySelectorAll('#course-name-group .course-opt-row input[type="checkbox"]');
-                    if (val.indexOf('short course') !== -1 || val.indexOf('វគ្គបណ្ដុះបណ្ដាលខ្លី') !== -1 || val.indexOf('វគ្គខ្លី') !== -1) {
+                    if (val.indexOf('short course') !== -1 || val.indexOf('short-term') !== -1 || val.indexOf('training') !== -1 || val.indexOf('វគ្គបណ្ដុះបណ្ដាលខ្លី') !== -1 || val.indexOf('វគ្គខ្លី') !== -1 || val.indexOf('រយៈពេលខ្លី') !== -1) {
                         courseGroup.style.display = 'block';
                         // The native select is display:none, and a hidden empty
                         // control carrying `required` makes the browser refuse to

@@ -997,6 +997,7 @@ function futuristic_it_service_dropdown($items, $args) {
 
         $svc_key = 'svc_' . md5($card['title'] ?? '');
         $custom_link = $card['link'] ?? '';
+        $has_courses = !empty($card['courses']) || ($type === 'Course');
         // Checked before the custom-link branch on purpose: the Procurement
         // card carries a link to the contact page, so without this the menu
         // entry would keep pointing at contact instead of the detail page.
@@ -1009,6 +1010,9 @@ function futuristic_it_service_dropdown($items, $args) {
             $svc_link = add_query_arg('service_key', $svc_key, home_url('/service-detail/'));
         }
         $svc_link = add_query_arg('site_lang', $current_lang, $svc_link);
+        if ($type === 'Course' || $has_courses) {
+            $svc_link .= '#related-courses';
+        }
 
         $child = new stdClass();
         $child->ID = 0;
@@ -1397,7 +1401,7 @@ function futuristict_homepage_services_page() {
                 if (isset($card['desc_km'])) $card['desc_km'] = sanitize_textarea_field($card['desc_km']);
                 if (isset($card['link_text_km'])) $card['link_text_km'] = sanitize_text_field($card['link_text_km']);
                 if (isset($existing[$i])) {
-                    foreach (array('features', 'features_text', 'features_text_km', 'packages', 'sections', 'packages_title', 'packages_desc', 'features_title', 'features_desc') as $field) {
+                    foreach (array('type', 'courses', 'course_main_title_en', 'course_main_title_kh', 'course_main_description_en', 'course_main_description_kh', 'why_learn', 'why_learn_title', 'why_learn_title_km', 'why_learn_cta_title', 'why_learn_cta_title_km', 'why_learn_cta_desc', 'why_learn_cta_desc_km', 'why_learn_cta_btn_text', 'why_learn_cta_btn_text_km', 'faqs', 'faq_title', 'faq_title_km', 'faq_subtitle', 'faq_subtitle_km', 'images', 'features', 'features_text', 'features_text_km', 'packages', 'sections', 'packages_title', 'packages_title_km', 'packages_desc', 'packages_desc_km', 'features_title', 'features_title_km', 'features_desc', 'features_desc_km') as $field) {
                         if (isset($existing[$i][$field]) && !isset($card[$field])) {
                             $card[$field] = $existing[$i][$field];
                         }
@@ -1405,7 +1409,7 @@ function futuristict_homepage_services_page() {
                 }
             }
             unset($card);
-            update_option('custom_service_cards', sanitize_text_field(wp_json_encode($cards)));
+            update_option('custom_service_cards', wp_json_encode($cards));
         }
         futuristic_it_toast('Services saved!');
     }
@@ -1743,17 +1747,68 @@ function futuristict_services_page() {
     <?php
 }
 
-// Auto-create Service Detail page
+// Helper to fix media URLs pointing to localhost
+function futuristic_it_media_url($url) {
+    if (empty($url) || !is_string($url)) return '';
+    if (strpos($url, 'localhost') !== false || strpos($url, '127.0.0.1') !== false) {
+        $parsed = parse_url($url);
+        $path = $parsed['path'] ?? '';
+        if (!empty($path)) {
+            return home_url($path);
+        }
+    }
+    return $url;
+}
+
+// Auto-create Service Detail page & sync default services
 function futuristic_it_create_service_detail_page() {
     $page = get_page_by_path('service-detail');
     if (!$page) {
-        wp_insert_post(array(
-            'post_title'   => 'Service Detail',
-            'post_name'    => 'service-detail',
-            'post_status'  => 'publish',
-            'post_type'    => 'page',
+        $id = wp_insert_post(array(
+            'post_title'    => 'Service Detail',
+            'post_name'     => 'service-detail',
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
             'page_template' => 'services/service-detail.php',
         ));
+        if ($id && !is_wp_error($id)) {
+            update_post_meta($id, '_wp_page_template', 'services/service-detail.php');
+        }
+    } else {
+        $tpl = get_post_meta($page->ID, '_wp_page_template', true);
+        if ($tpl !== 'services/service-detail.php') {
+            update_post_meta($page->ID, '_wp_page_template', 'services/service-detail.php');
+        }
+    }
+
+    // Auto-seed Course service / services if missing from DB
+    $json_file = get_template_directory() . '/services-default.json';
+    if (file_exists($json_file)) {
+        $raw = get_option('custom_service_cards', '[]');
+        $cards = json_decode($raw, true);
+        $defaults = json_decode(file_get_contents($json_file), true);
+
+        if (empty($cards) || !is_array($cards)) {
+            if (is_array($defaults) && !empty($defaults)) {
+                update_option('custom_service_cards', wp_json_encode($defaults));
+            }
+        } elseif (is_array($defaults)) {
+            $has_course = false;
+            foreach ($cards as $c) {
+                if (($c['type'] ?? '') === 'Course' || !empty($c['courses'])) {
+                    $has_course = true;
+                    break;
+                }
+            }
+            if (!$has_course) {
+                foreach ($defaults as $dc) {
+                    if (($dc['type'] ?? '') === 'Course' || !empty($dc['courses'])) {
+                        $cards[] = $dc;
+                    }
+                }
+                update_option('custom_service_cards', wp_json_encode($cards));
+            }
+        }
     }
 }
 add_action('after_switch_theme', 'futuristic_it_create_service_detail_page');
@@ -3147,7 +3202,7 @@ function futuristict_services_cards_page() {
             // Preserve existing detail fields from Service Details admin
             if (isset($existing_services[$i])) {
                 $existing = $existing_services[$i];
-                foreach (array('packages', 'images', 'courses', 'packages_title', 'packages_title_km', 'packages_desc', 'packages_desc_km', 'sections', 'features_title', 'features_title_km', 'features_desc', 'features_desc_km') as $field) {
+                foreach (array('packages', 'images', 'courses', 'course_main_title_en', 'course_main_title_kh', 'course_main_description_en', 'course_main_description_kh', 'why_learn', 'why_learn_title', 'why_learn_title_km', 'why_learn_cta_title', 'why_learn_cta_title_km', 'why_learn_cta_desc', 'why_learn_cta_desc_km', 'why_learn_cta_btn_text', 'why_learn_cta_btn_text_km', 'faqs', 'faq_title', 'faq_title_km', 'faq_subtitle', 'faq_subtitle_km', 'packages_title', 'packages_title_km', 'packages_desc', 'packages_desc_km', 'sections', 'features_title', 'features_title_km', 'features_desc', 'features_desc_km') as $field) {
                     if (isset($existing[$field])) $card_data[$field] = $existing[$field];
                 }
             }

@@ -122,11 +122,11 @@ if ($current_lang === 'km') {
 
 $images = $service['images'] ?? array();$image_list = array();
 for ($i = 1; $i <= 6; $i++) {
-    if (!empty($images[$i])) $image_list[] = $images[$i];
+    if (!empty($images[$i])) $image_list[] = function_exists('futuristic_it_media_url') ? futuristic_it_media_url($images[$i]) : $images[$i];
 }
-if (empty($image_list) && !empty($service['image'])) $image_list[] = $service['image'];
+if (empty($image_list) && !empty($service['image'])) $image_list[] = function_exists('futuristic_it_media_url') ? futuristic_it_media_url($service['image']) : $service['image'];
 
-$is_short_course = stripos($service['title'] ?? '', 'short course') !== false;
+$is_short_course = ($service['type'] ?? '') === 'Course' || stripos($service['title'] ?? '', 'short course') !== false || stripos($service['title'] ?? '', 'short-term') !== false || stripos($service['title'] ?? '', 'training') !== false;
 
 ?>
 <main>
@@ -171,56 +171,56 @@ $is_short_course = stripos($service['title'] ?? '', 'short course') !== false;
     </section>
     <?php endif; endif; ?>
 
-    <?php if (!empty($image_list) || !empty($features_text)) : ?>
-    <section class="section pt-[50px]">
-        <div class="container">
-            <?php if (!empty($service['features_title'])) : ?>
-                <h2 class="section-title text-center" data-anim="fade-up"><?php echo esc_html($service['features_title']); ?></h2>
-            <?php endif; ?>
-            <?php if (!empty($service['features_desc'])) : ?>
-                <p class="section-subtitle text-center" data-anim="fade-up" data-anim-delay="100"><?php echo esc_html($service['features_desc']); ?></p>
-            <?php endif; ?>
+    <?php if (($service['type'] ?? '') !== 'Course' && (!empty($image_list) || !empty($features_text))) : ?>
+        <section class="section pt-[50px]">
+            <div class="container">
+                <?php if (!empty($service['features_title'])) : ?>
+                    <h2 class="section-title text-center" data-anim="fade-up"><?php echo esc_html($service['features_title']); ?></h2>
+                <?php endif; ?>
+                <?php if (!empty($service['features_desc'])) : ?>
+                    <p class="section-subtitle text-center" data-anim="fade-up" data-anim-delay="100"><?php echo esc_html($service['features_desc']); ?></p>
+                <?php endif; ?>
 
-            <div class="service-detail-wrapper grid grid-cols-1 md:grid-cols-2 gap-[60px] mb-[60px] max-md:flex max-md:flex-col max-md:gap-[30px]">
-                <?php if (!empty($image_list)) : ?>
-                <div class="grid gap-4" data-anim="fade-right">
-                    <img src="<?php echo esc_url($image_list[0]); ?>" alt="<?php echo esc_attr($service['title']); ?>" class="service-main-image w-full h-[420px] max-md:h-[320px] max-[576px]:h-[260px] object-cover rounded-[var(--radius)] bg-[var(--cream-dark)]" id="mainServiceImage">
-                    <?php if (count($image_list) > 1) : ?>
-                    <div class="service-thumbnails grid grid-cols-5 max-[576px]:grid-cols-3 gap-2.5">
-                        <?php foreach ($image_list as $idx => $img) : ?>
-                            <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($service['title']); ?> <?php echo $idx + 1; ?>" class="service-thumbnail w-full h-16 object-cover rounded-[var(--radius-sm)] cursor-pointer opacity-60 border-2 border-transparent transition-all duration-[0.25s] hover:opacity-100 hover:border-[var(--gold)] <?php echo $idx === 0 ? 'opacity-100 border-[var(--gold)]' : ''; ?>" onclick="changeServiceImage(this)">
-                        <?php endforeach; ?>
+                <div class="service-detail-wrapper grid grid-cols-1 md:grid-cols-2 gap-[60px] mb-[60px] max-md:flex max-md:flex-col max-md:gap-[30px]">
+                    <?php if (!empty($image_list)) : ?>
+                    <div class="grid gap-4" data-anim="fade-right">
+                        <img src="<?php echo esc_url($image_list[0]); ?>" alt="<?php echo esc_attr($service['title']); ?>" class="service-main-image w-full h-[420px] max-md:h-[320px] max-[576px]:h-[260px] object-cover rounded-[var(--radius)] bg-[var(--cream-dark)]" id="mainServiceImage">
+                        <?php if (count($image_list) > 1) : ?>
+                        <div class="service-thumbnails grid grid-cols-5 max-[576px]:grid-cols-3 gap-2.5">
+                            <?php foreach ($image_list as $idx => $img) : ?>
+                                <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($service['title']); ?> <?php echo $idx + 1; ?>" class="service-thumbnail w-full h-16 object-cover rounded-[var(--radius-sm)] cursor-pointer opacity-60 border-2 border-transparent transition-all duration-[0.25s] hover:opacity-100 hover:border-[var(--gold)] <?php echo $idx === 0 ? 'opacity-100 border-[var(--gold)]' : ''; ?>" onclick="changeServiceImage(this)">
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($features_text)) : ?>
+                    <div class="py-2.5" data-anim="fade-left">
+                        <h2 class="text-2xl sm:text-3xl text-[var(--text-dark)] mb-[22px]"><?php echo esc_html($service['title']); ?></h2>
+                        <ul class="list-none p-0 mb-[26px]">
+                            <?php foreach (explode("\n", $features_text) as $line) :
+                                if (trim($line) === '') continue;
+                                $parts = explode(':', $line, 2);
+                            ?>
+                                <li class="py-2.5 border-b border-[var(--border-color)] text-sm sm:text-base text-[var(--text-body)]">
+                                    <?php if (count($parts) === 2) : ?>
+                                        <strong class="text-[var(--text-dark)] font-bold"><?php echo esc_html(trim($parts[0])); ?>:</strong> <?php echo esc_html(trim($parts[1])); ?>
+                                    <?php else : ?>
+                                        <?php echo esc_html(trim($line)); ?>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
                     </div>
                     <?php endif; ?>
                 </div>
-                <?php endif; ?>
-
-                <?php if (!empty($features_text)) : ?>
-                <div class="py-2.5" data-anim="fade-left">
-                    <h2 class="text-2xl sm:text-3xl text-[var(--text-dark)] mb-[22px]"><?php echo esc_html($service['title']); ?></h2>
-                    <ul class="list-none p-0 mb-[26px]">
-                        <?php foreach (explode("\n", $features_text) as $line) :
-                            if (trim($line) === '') continue;
-                            $parts = explode(':', $line, 2);
-                        ?>
-                            <li class="py-2.5 border-b border-[var(--border-color)] text-sm sm:text-base text-[var(--text-body)]">
-                                <?php if (count($parts) === 2) : ?>
-                                    <strong class="text-[var(--text-dark)] font-bold"><?php echo esc_html(trim($parts[0])); ?>:</strong> <?php echo esc_html(trim($parts[1])); ?>
-                                <?php else : ?>
-                                    <?php echo esc_html(trim($line)); ?>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endif; ?>
             </div>
-        </div>
-    </section>
+        </section>
     <?php endif; ?>
 
 
-    <?php  if (($service['type']) === 'Course' && !empty($service['courses'])) : ?>
+    <?php  if ((($service['type'] ?? '') === 'Course' || stripos($service['title'] ?? '', 'short course') !== false || stripos($service['title'] ?? '', 'short-term') !== false) && !empty($service['courses'])) : ?>
         <!-- RELATED COURSES / TRAINING SECTION -->
         <section class="section bg-white" id="related-courses">
             <div class="container">
@@ -260,7 +260,7 @@ $is_short_course = stripos($service['title'] ?? '', 'short course') !== false;
                     <?php foreach ($service['courses'] as $ci => $crs) : ?>
                     <div class="courses-card min-w-full sm:min-w-[calc(25%-15px)] max-w-full sm:max-w-[calc(25%-15px)] snap-start flex-shrink-0" data-course-index="<?php echo $ci; ?>" data-badge="<?php echo esc_attr(strtolower(trim($crs['badge'] ?? ''))); ?>">
                         <div class="courses-card-image">
-                            <img src="<?php echo esc_url($crs['image'] ?? ''); ?>" alt="<?php echo esc_attr($crs['title_en'] ?? $crs['title'] ?? ''); ?>">
+                            <img src="<?php echo esc_url(function_exists('futuristic_it_media_url') ? futuristic_it_media_url($crs['image'] ?? '') : ($crs['image'] ?? '')); ?>" alt="<?php echo esc_attr($crs['title_en'] ?? $crs['title'] ?? ''); ?>">
                         </div>
                         <div class="courses-card-body">
                             <h3 class="courses-card-title"><?php echo esc_html($crs['title_en'] ?? $crs['title'] ?? ''); ?></h3>
@@ -333,8 +333,17 @@ $is_short_course = stripos($service['title'] ?? '', 'short course') !== false;
     </section>
 
     <!-- Course data for JS -->
+    <?php
+    $courses_for_js = $service['courses'] ?? array();
+    if (function_exists('futuristic_it_media_url')) {
+        foreach ($courses_for_js as &$cjs) {
+            if (!empty($cjs['image'])) $cjs['image'] = futuristic_it_media_url($cjs['image']);
+        }
+        unset($cjs);
+    }
+    ?>
     <script>
-    var courseData = <?php echo wp_json_encode($service['courses'] ?? array()); ?>;
+    var courseData = <?php echo wp_json_encode($courses_for_js); ?>;
     // Title of this service as the contact form lists it, already resolved to
     // the current language, so a Register click can preselect it there.
     var courseServiceTitle = <?php echo wp_json_encode($service['title'] ?? ''); ?>;

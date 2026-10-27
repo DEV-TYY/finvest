@@ -46,7 +46,8 @@ if (!is_array($stats)) $stats = array();
                     $svc_type = $card['type'] ?? 'Detail';
                     $features = isset($card['features']) && is_array($card['features']) ? $card['features'] : array();
                     $svc_key = 'svc_' . md5($card['title'] ?? '');
-                    $has_details = !empty($features) || !empty($card['packages']) || !empty($card['sections']) || !empty($card['images']);
+                    $has_courses = !empty($card['courses']) || ($svc_type === 'Course');
+                    $has_details = !empty($features) || !empty($card['packages']) || !empty($card['sections']) || !empty($card['images']) || $has_courses;
                     $custom_link = $card['link'] ?? '';
                     // Checked before the custom-link branch on purpose: the
                     // Procurement card carries a link to the contact page, so
@@ -59,7 +60,11 @@ if (!is_array($stats)) $stats = array();
                     } elseif (!empty($custom_link) && $custom_link !== '#') {
                         $svc_link = $custom_link;
                     } else {
-                        $svc_link = $has_details ? add_query_arg('service_key', $svc_key, home_url('/service-detail/')) : '#';
+                        $svc_url = add_query_arg('service_key', $svc_key, home_url('/service-detail/'));
+                        if ($svc_type === 'Course' || $has_courses) {
+                            $svc_url .= '#related-courses';
+                        }
+                        $svc_link = $has_details ? $svc_url : '#';
                     }
                     $card_title = ($current_lang === 'km' && !empty($card['title_km'])) ? $card['title_km'] : ($card['title'] ?? '');
                     $card_desc = ($current_lang === 'km' && !empty($card['desc_km'])) ? $card['desc_km'] : ($card['desc'] ?? '');
